@@ -9,199 +9,199 @@ local addonName, addon = ...
 addon.CLASS_STRATEGIES = {
     WARRIOR = {
         { label = "Spec", channel = "co", exclusive = true, strategies = {
-            { id = "tank", label = "Tank" },
-            { id = "arms", label = "Arms" },
-            { id = "fury", label = "Fury" },
+            { id = "tank", label = "Tank", desc = "Defensive stance, high threat" },
+            { id = "arms", label = "Arms", desc = "Arms DPS with Mortal Strike" },
+            { id = "fury", label = "Fury", desc = "Dual-wield fury DPS" },
         }},
         { label = "Abilities", channel = "co", exclusive = false, strategies = {
-            { id = "aoe",  label = "AOE" },
-            { id = "pull", label = "Pull" },
+            { id = "aoe",  label = "AOE", desc = "Use area damage abilities" },
+            { id = "pull", label = "Pull", desc = "Pull enemies from range" },
         }},
     },
     PALADIN = {
         { label = "Spec", channel = "co", exclusive = true, strategies = {
-            { id = "tank", label = "Tank" },
-            { id = "dps",  label = "DPS" },
-            { id = "heal", label = "Heal" },
+            { id = "tank", label = "Tank", desc = "Protection tanking" },
+            { id = "dps",  label = "DPS", desc = "Retribution DPS" },
+            { id = "heal", label = "Heal", desc = "Holy healing" },
         }},
         { label = "Abilities", channel = "co", exclusive = false, strategies = {
-            { id = "cure",  label = "Cure" },
-            { id = "boost", label = "Boost" },
-            { id = "cc",    label = "CC" },
+            { id = "cure",  label = "Cure", desc = "Cleanse diseases and magic" },
+            { id = "boost", label = "Boost", desc = "Use cooldown abilities" },
+            { id = "cc",    label = "CC", desc = "Use crowd control" },
         }},
         { label = "Buffs", channel = "co", exclusive = false, strategies = {
-            { id = "bthreat", label = "Threat" },
-            { id = "bhealth", label = "Health" },
-            { id = "bmana",   label = "Mana" },
-            { id = "bdps",    label = "DPS" },
-            { id = "bstats",  label = "Stats" },
-            { id = "barmor",  label = "Armor" },
-            { id = "bcast",   label = "Cast" },
-            { id = "bspeed",  label = "Speed" },
-            { id = "baoe",    label = "AOE" },
+            { id = "bthreat", label = "Threat", desc = "Blessing of Sanctuary" },
+            { id = "bhealth", label = "Health", desc = "Blessing of Kings (health)" },
+            { id = "bmana",   label = "Mana", desc = "Blessing of Wisdom" },
+            { id = "bdps",    label = "DPS", desc = "Blessing of Might" },
+            { id = "bstats",  label = "Stats", desc = "Blessing of Kings (stats)" },
+            { id = "barmor",  label = "Armor", desc = "Devotion Aura" },
+            { id = "bcast",   label = "Cast", desc = "Concentration Aura" },
+            { id = "bspeed",  label = "Speed", desc = "Crusader Aura" },
+            { id = "baoe",    label = "AOE", desc = "Retribution Aura" },
         }},
         { label = "Resistances", channel = "co", exclusive = false, strategies = {
-            { id = "rshadow", label = "Shadow" },
-            { id = "rfrost",  label = "Frost" },
-            { id = "rfire",   label = "Fire" },
+            { id = "rshadow", label = "Shadow", desc = "Shadow Resistance Aura" },
+            { id = "rfrost",  label = "Frost", desc = "Frost Resistance Aura" },
+            { id = "rfire",   label = "Fire", desc = "Fire Resistance Aura" },
         }},
     },
     HUNTER = {
         { label = "Spec", channel = "co", exclusive = true, strategies = {
-            { id = "bm",   label = "BM" },
-            { id = "mm",   label = "MM" },
-            { id = "surv", label = "Surv" },
+            { id = "bm",   label = "BM", desc = "Beast Mastery spec" },
+            { id = "mm",   label = "MM", desc = "Marksmanship spec" },
+            { id = "surv", label = "Surv", desc = "Survival spec" },
         }},
         { label = "Abilities", channel = "co", exclusive = false, strategies = {
-            { id = "pet",        label = "Pet" },
-            { id = "aoe",        label = "AOE" },
-            { id = "boost",      label = "Boost" },
-            { id = "cc",         label = "CC" },
-            { id = "trap weave", label = "Trap Weave" },
+            { id = "pet",        label = "Pet", desc = "Use pet abilities" },
+            { id = "aoe",        label = "AOE", desc = "Use multi-target abilities" },
+            { id = "boost",      label = "Boost", desc = "Use cooldown abilities" },
+            { id = "cc",         label = "CC", desc = "Use traps and crowd control" },
+            { id = "trap weave", label = "Trap Weave", desc = "Weave traps between shots" },
         }},
         { label = "Buffs", channel = "co", exclusive = false, strategies = {
-            { id = "bspeed", label = "Speed" },
-            { id = "bdps",   label = "DPS" },
-            { id = "bmana",  label = "Mana" },
+            { id = "bspeed", label = "Speed", desc = "Aspect of the Cheetah/Pack" },
+            { id = "bdps",   label = "DPS", desc = "Aspect of the Hawk/Dragonhawk" },
+            { id = "bmana",  label = "Mana", desc = "Aspect of the Viper" },
         }},
         { label = "Resistances", channel = "co", exclusive = false, strategies = {
-            { id = "rnature", label = "Nature" },
+            { id = "rnature", label = "Nature", desc = "Aspect of the Wild" },
         }},
     },
     ROGUE = {
         { label = "Spec", channel = "co", exclusive = true, strategies = {
-            { id = "dps",   label = "DPS" },
-            { id = "melee", label = "Melee" },
+            { id = "dps",   label = "DPS", desc = "Combat DPS rotation" },
+            { id = "melee", label = "Melee", desc = "Melee-focused combat" },
         }},
         { label = "Abilities", channel = "co", exclusive = false, strategies = {
-            { id = "aoe",      label = "AOE" },
-            { id = "stealthed", label = "Stealthed" },
-            { id = "stealth",  label = "Stealth" },
-            { id = "boost",    label = "Boost" },
-            { id = "cc",       label = "CC" },
+            { id = "aoe",      label = "AOE", desc = "Use Fan of Knives and AOE" },
+            { id = "stealthed", label = "Stealthed", desc = "Open from stealth" },
+            { id = "stealth",  label = "Stealth", desc = "Use stealth approach" },
+            { id = "boost",    label = "Boost", desc = "Use cooldown abilities" },
+            { id = "cc",       label = "CC", desc = "Use Sap and Blind" },
         }},
     },
     PRIEST = {
         { label = "Spec", channel = "co", exclusive = true, strategies = {
-            { id = "heal",      label = "Heal" },
-            { id = "shadow",    label = "Shadow" },
-            { id = "holy dps",  label = "Holy DPS" },
-            { id = "holy heal", label = "Holy Heal" },
+            { id = "heal",      label = "Heal", desc = "Discipline healing" },
+            { id = "shadow",    label = "Shadow", desc = "Shadow DPS" },
+            { id = "holy dps",  label = "Holy DPS", desc = "Holy DPS (Smite)" },
+            { id = "holy heal", label = "Holy Heal", desc = "Holy healing" },
         }},
         { label = "Abilities", channel = "co", exclusive = false, strategies = {
-            { id = "shadow aoe",    label = "Shadow AOE" },
-            { id = "shadow debuff", label = "Shadow Debuff" },
-            { id = "cure",          label = "Cure" },
-            { id = "buff",          label = "Buff" },
-            { id = "boost",         label = "Boost" },
-            { id = "cc",            label = "CC" },
+            { id = "shadow aoe",    label = "Shadow AOE", desc = "Mind Sear and AOE" },
+            { id = "shadow debuff", label = "Shadow Debuff", desc = "Apply Shadow Word: Pain, VT" },
+            { id = "cure",          label = "Cure", desc = "Dispel magic and diseases" },
+            { id = "buff",          label = "Buff", desc = "Apply Power Word: Fortitude" },
+            { id = "boost",         label = "Boost", desc = "Use Inner Focus, cooldowns" },
+            { id = "cc",            label = "CC", desc = "Use Shackle Undead, Psychic Scream" },
         }},
         { label = "Resistances", channel = "co", exclusive = false, strategies = {
-            { id = "rshadow", label = "Shadow" },
+            { id = "rshadow", label = "Shadow", desc = "Shadow Protection" },
         }},
     },
     SHAMAN = {
         { label = "Spec", channel = "co", exclusive = true, strategies = {
-            { id = "heal",   label = "Heal" },
-            { id = "melee",  label = "Melee" },
-            { id = "caster", label = "Caster" },
+            { id = "heal",   label = "Heal", desc = "Restoration healing" },
+            { id = "melee",  label = "Melee", desc = "Enhancement melee DPS" },
+            { id = "caster", label = "Caster", desc = "Elemental caster DPS" },
         }},
         { label = "Abilities", channel = "co", exclusive = false, strategies = {
-            { id = "aoe",   label = "AOE" },
-            { id = "cure",  label = "Cure" },
-            { id = "boost", label = "Boost" },
+            { id = "aoe",   label = "AOE", desc = "Use Chain Lightning, Fire Nova" },
+            { id = "cure",  label = "Cure", desc = "Cleanse poisons and diseases" },
+            { id = "boost", label = "Boost", desc = "Use Heroism/Bloodlust" },
         }},
         { label = "Totems (Earth)", channel = "co", exclusive = false, strategies = {
-            { id = "strength of earth", label = "Strength" },
-            { id = "stoneskin",         label = "Stoneskin" },
-            { id = "tremor",            label = "Tremor" },
-            { id = "earthbind",         label = "Earthbind" },
+            { id = "strength of earth", label = "Strength", desc = "Strength of Earth Totem" },
+            { id = "stoneskin",         label = "Stoneskin", desc = "Stoneskin Totem" },
+            { id = "tremor",            label = "Tremor", desc = "Tremor Totem (fear removal)" },
+            { id = "earthbind",         label = "Earthbind", desc = "Earthbind Totem (slow)" },
         }},
         { label = "Totems (Fire)", channel = "co", exclusive = false, strategies = {
-            { id = "searing",     label = "Searing" },
-            { id = "magma",       label = "Magma" },
-            { id = "flametongue", label = "Flametongue" },
+            { id = "searing",     label = "Searing", desc = "Searing Totem (single target)" },
+            { id = "magma",       label = "Magma", desc = "Magma Totem (AOE damage)" },
+            { id = "flametongue", label = "Flametongue", desc = "Flametongue Totem (spell power)" },
         }},
     },
     MAGE = {
         { label = "Spec", channel = "co", exclusive = true, strategies = {
-            { id = "frost",     label = "Frost" },
-            { id = "fire",      label = "Fire" },
-            { id = "frostfire", label = "Frostfire" },
-            { id = "arcane",    label = "Arcane" },
+            { id = "frost",     label = "Frost", desc = "Frost spec" },
+            { id = "fire",      label = "Fire", desc = "Fire spec" },
+            { id = "frostfire", label = "Frostfire", desc = "Frostfire Bolt spec" },
+            { id = "arcane",    label = "Arcane", desc = "Arcane spec" },
         }},
         { label = "Abilities", channel = "co", exclusive = false, strategies = {
-            { id = "aoe",         label = "AOE" },
-            { id = "cure",        label = "Cure" },
-            { id = "buff",        label = "Buff" },
-            { id = "boost",       label = "Boost" },
-            { id = "cc",          label = "CC" },
-            { id = "firestarter", label = "Firestarter" },
+            { id = "aoe",         label = "AOE", desc = "Use Blizzard, Flamestrike" },
+            { id = "cure",        label = "Cure", desc = "Remove Curse" },
+            { id = "buff",        label = "Buff", desc = "Apply Arcane Intellect" },
+            { id = "boost",       label = "Boost", desc = "Use Icy Veins, Arcane Power" },
+            { id = "cc",          label = "CC", desc = "Use Polymorph" },
+            { id = "firestarter", label = "Firestarter", desc = "Open with Fireball before combat" },
         }},
         { label = "Buffs", channel = "co", exclusive = false, strategies = {
-            { id = "bmana", label = "Mana" },
-            { id = "bdps",  label = "DPS" },
+            { id = "bmana", label = "Mana", desc = "Mage Armor (mana regen)" },
+            { id = "bdps",  label = "DPS", desc = "Molten Armor (crit)" },
         }},
     },
     WARLOCK = {
         { label = "Spec", channel = "co", exclusive = true, strategies = {
-            { id = "affli",  label = "Affli" },
-            { id = "demo",   label = "Demo" },
-            { id = "destro", label = "Destro" },
+            { id = "affli",  label = "Affli", desc = "Affliction DOT spec" },
+            { id = "demo",   label = "Demo", desc = "Demonology spec" },
+            { id = "destro", label = "Destro", desc = "Destruction direct damage" },
         }},
         { label = "Abilities", channel = "co", exclusive = false, strategies = {
-            { id = "aoe",        label = "AOE" },
-            { id = "pet",        label = "Pet" },
-            { id = "tank",       label = "Tank" },
-            { id = "boost",      label = "Boost" },
-            { id = "cc",         label = "CC" },
-            { id = "meta melee", label = "Meta Melee" },
+            { id = "aoe",        label = "AOE", desc = "Use Rain of Fire, Seed" },
+            { id = "pet",        label = "Pet", desc = "Use pet abilities actively" },
+            { id = "tank",       label = "Tank", desc = "Voidwalker tanking mode" },
+            { id = "boost",      label = "Boost", desc = "Use cooldown abilities" },
+            { id = "cc",         label = "CC", desc = "Use Fear, Banish" },
+            { id = "meta melee", label = "Meta Melee", desc = "Metamorphosis melee mode" },
         }},
         { label = "Pet", channel = "co", exclusive = true, strategies = {
-            { id = "imp",        label = "Imp" },
-            { id = "voidwalker", label = "Voidwalker" },
-            { id = "succubus",   label = "Succubus" },
-            { id = "felhunter",  label = "Felhunter" },
-            { id = "felguard",   label = "Felguard" },
+            { id = "imp",        label = "Imp", desc = "Summon Imp (ranged DPS)" },
+            { id = "voidwalker", label = "Voidwalker", desc = "Summon Voidwalker (tank)" },
+            { id = "succubus",   label = "Succubus", desc = "Summon Succubus (CC)" },
+            { id = "felhunter",  label = "Felhunter", desc = "Summon Felhunter (anti-caster)" },
+            { id = "felguard",   label = "Felguard", desc = "Summon Felguard (melee DPS)" },
         }},
         { label = "Soulstone", channel = "co", exclusive = true, strategies = {
-            { id = "ss self",   label = "SS Self" },
-            { id = "ss master", label = "SS Master" },
-            { id = "ss tank",   label = "SS Tank" },
-            { id = "ss healer", label = "SS Healer" },
+            { id = "ss self",   label = "SS Self", desc = "Soulstone on self" },
+            { id = "ss master", label = "SS Master", desc = "Soulstone on master" },
+            { id = "ss tank",   label = "SS Tank", desc = "Soulstone on tank" },
+            { id = "ss healer", label = "SS Healer", desc = "Soulstone on healer" },
         }},
     },
     DRUID = {
         { label = "Spec", channel = "co", exclusive = true, strategies = {
-            { id = "bear",    label = "Bear" },
-            { id = "cat",     label = "Cat" },
-            { id = "caster",  label = "Caster" },
-            { id = "heal",    label = "Heal" },
-            { id = "offheal", label = "Offheal" },
+            { id = "bear",    label = "Bear", desc = "Bear form tanking" },
+            { id = "cat",     label = "Cat", desc = "Cat form DPS" },
+            { id = "caster",  label = "Caster", desc = "Moonkin caster DPS" },
+            { id = "heal",    label = "Heal", desc = "Restoration healing" },
+            { id = "offheal", label = "Offheal", desc = "Offheal while in cat form" },
         }},
         { label = "Abilities", channel = "co", exclusive = false, strategies = {
-            { id = "melee",         label = "Melee" },
-            { id = "cat aoe",       label = "Cat AOE" },
-            { id = "caster aoe",    label = "Caster AOE" },
-            { id = "caster debuff", label = "Caster Debuff" },
-            { id = "cure",          label = "Cure" },
-            { id = "buff",          label = "Buff" },
-            { id = "boost",         label = "Boost" },
-            { id = "cc",            label = "CC" },
+            { id = "melee",         label = "Melee", desc = "Melee combat style" },
+            { id = "cat aoe",       label = "Cat AOE", desc = "Swipe in cat form" },
+            { id = "caster aoe",    label = "Caster AOE", desc = "Hurricane, Starfall" },
+            { id = "caster debuff", label = "Caster Debuff", desc = "Apply Insect Swarm, Moonfire" },
+            { id = "cure",          label = "Cure", desc = "Remove Poison, Curse" },
+            { id = "buff",          label = "Buff", desc = "Apply Mark of the Wild, Thorns" },
+            { id = "boost",         label = "Boost", desc = "Use Berserk, Nature's Swiftness" },
+            { id = "cc",            label = "CC", desc = "Use Entangling Roots, Hibernate" },
         }},
     },
     DEATHKNIGHT = {
         { label = "Spec", channel = "co", exclusive = true, strategies = {
-            { id = "blood",  label = "Blood" },
-            { id = "frost",  label = "Frost" },
-            { id = "unholy", label = "Unholy" },
+            { id = "blood",  label = "Blood", desc = "Blood tanking spec" },
+            { id = "frost",  label = "Frost", desc = "Frost DPS spec" },
+            { id = "unholy", label = "Unholy", desc = "Unholy DPS spec" },
         }},
         { label = "Abilities", channel = "co", exclusive = false, strategies = {
-            { id = "frost aoe",  label = "Frost AOE" },
-            { id = "unholy aoe", label = "Unholy AOE" },
+            { id = "frost aoe",  label = "Frost AOE", desc = "Howling Blast AOE" },
+            { id = "unholy aoe", label = "Unholy AOE", desc = "Pestilence spread diseases" },
         }},
         { label = "Buffs", channel = "co", exclusive = false, strategies = {
-            { id = "bdps", label = "DPS" },
+            { id = "bdps", label = "DPS", desc = "Horn of Winter" },
         }},
     },
 }
@@ -211,13 +211,13 @@ addon.CLASS_STRATEGIES = {
 -- Available formation options for bots.
 -- ============================================================================
 addon.FORMATIONS = {
-    { id = "near",   label = "Near" },
-    { id = "melee",  label = "Melee" },
-    { id = "line",   label = "Line" },
-    { id = "circle", label = "Circle" },
-    { id = "arrow",  label = "Arrow" },
-    { id = "far",    label = "Far" },
-    { id = "chaos",  label = "Chaos" },
+    { id = "near",   label = "Near",   desc = "Stay close to the leader" },
+    { id = "melee",  label = "Melee",  desc = "Melee formation around target" },
+    { id = "line",   label = "Line",   desc = "Form a line behind leader" },
+    { id = "circle", label = "Circle", desc = "Spread in a circle around leader" },
+    { id = "arrow",  label = "Arrow",  desc = "Arrow formation pointing forward" },
+    { id = "far",    label = "Far",    desc = "Keep maximum distance from leader" },
+    { id = "chaos",  label = "Chaos",  desc = "Random positioning around leader" },
 }
 
 -- ============================================================================
@@ -225,11 +225,11 @@ addon.FORMATIONS = {
 -- Available loot strategy options for bots.
 -- ============================================================================
 addon.LOOT_STRATEGIES = {
-    { id = "normal",      label = "Normal" },
-    { id = "all",         label = "All" },
-    { id = "gray",        label = "Gray" },
-    { id = "disenchant",  label = "Disenchant" },
-    { id = "skill",       label = "Skill" },
+    { id = "normal",      label = "Normal",      desc = "Loot normally" },
+    { id = "all",         label = "All",         desc = "Loot everything" },
+    { id = "gray",        label = "Gray",        desc = "Only loot gray (vendor trash) items" },
+    { id = "disenchant",  label = "Disenchant",  desc = "Disenchant green+ items" },
+    { id = "skill",       label = "Skill",       desc = "Loot items for professions" },
 }
 
 -- ============================================================================
@@ -237,14 +237,14 @@ addon.LOOT_STRATEGIES = {
 -- Raid Target Icon options with corresponding icon textures.
 -- ============================================================================
 addon.RTI_TARGETS = {
-    { id = "skull",    label = "Skull",    icon = "Interface\\TARGETINGFRAME\\UI-RaidTargetingIcon_8" },
-    { id = "cross",    label = "Cross",    icon = "Interface\\TARGETINGFRAME\\UI-RaidTargetingIcon_7" },
-    { id = "circle",   label = "Circle",   icon = "Interface\\TARGETINGFRAME\\UI-RaidTargetingIcon_2" },
-    { id = "star",     label = "Star",     icon = "Interface\\TARGETINGFRAME\\UI-RaidTargetingIcon_1" },
-    { id = "square",   label = "Square",   icon = "Interface\\TARGETINGFRAME\\UI-RaidTargetingIcon_6" },
-    { id = "triangle", label = "Triangle", icon = "Interface\\TARGETINGFRAME\\UI-RaidTargetingIcon_3" },
-    { id = "diamond",  label = "Diamond",  icon = "Interface\\TARGETINGFRAME\\UI-RaidTargetingIcon_4" },
-    { id = "moon",     label = "Moon",     icon = "Interface\\TARGETINGFRAME\\UI-RaidTargetingIcon_5" },
+    { id = "skull",    label = "Skull",    icon = "Interface\\TARGETINGFRAME\\UI-RaidTargetingIcon_8", desc = "Focus target: Skull" },
+    { id = "cross",    label = "Cross",    icon = "Interface\\TARGETINGFRAME\\UI-RaidTargetingIcon_7", desc = "Focus target: Cross" },
+    { id = "circle",   label = "Circle",   icon = "Interface\\TARGETINGFRAME\\UI-RaidTargetingIcon_2", desc = "Focus target: Circle" },
+    { id = "star",     label = "Star",     icon = "Interface\\TARGETINGFRAME\\UI-RaidTargetingIcon_1", desc = "Focus target: Star" },
+    { id = "square",   label = "Square",   icon = "Interface\\TARGETINGFRAME\\UI-RaidTargetingIcon_6", desc = "Focus target: Square" },
+    { id = "triangle", label = "Triangle", icon = "Interface\\TARGETINGFRAME\\UI-RaidTargetingIcon_3", desc = "Focus target: Triangle" },
+    { id = "diamond",  label = "Diamond",  icon = "Interface\\TARGETINGFRAME\\UI-RaidTargetingIcon_4", desc = "Focus target: Diamond" },
+    { id = "moon",     label = "Moon",     icon = "Interface\\TARGETINGFRAME\\UI-RaidTargetingIcon_5", desc = "Focus target: Moon" },
 }
 
 -- ============================================================================
@@ -255,12 +255,12 @@ addon.RTI_TARGETS = {
 -- channel specifies the strategy channel ("nc" = non-combat, "co" = combat).
 -- ============================================================================
 addon.MOVEMENT_COMMANDS = {
-    { id = "follow",  label = "Follow",  isAction = true },
-    { id = "stay",    label = "Stay",    isAction = true },
-    { id = "guard",   label = "Guard",   isAction = true },
-    { id = "grind",   label = "Grind",   isAction = true },
-    { id = "passive", label = "Passive", isStrategy = true, channel = "nc" },
-    { id = "flee",    label = "Flee",    isAction = true },
+    { id = "follow",  label = "Follow",  isAction = true, desc = "Bot follows your character" },
+    { id = "stay",    label = "Stay",    isAction = true, desc = "Bot stays at current position" },
+    { id = "guard",   label = "Guard",   isAction = true, desc = "Bot guards a specific location" },
+    { id = "grind",   label = "Grind",   isAction = true, desc = "Bot grinds nearby enemies" },
+    { id = "passive", label = "Passive", isStrategy = true, channel = "nc", desc = "Bot avoids combat entirely" },
+    { id = "flee",    label = "Flee",    isAction = true, desc = "Bot flees from combat" },
 }
 
 -- ============================================================================
@@ -268,12 +268,12 @@ addon.MOVEMENT_COMMANDS = {
 -- General action commands for bots.
 -- ============================================================================
 addon.ACTION_COMMANDS = {
-    { id = "attack",      label = "Attack",      isAction = true },
-    { id = "tank attack", label = "Tank Attack",  isAction = true },
-    { id = "stats",       label = "Stats",        isAction = true },
-    { id = "revive",      label = "Revive",       isAction = true },
-    { id = "release",     label = "Release",      isAction = true },
-    { id = "summon",      label = "Summon",       isAction = true },
+    { id = "attack",      label = "Attack",      isAction = true, desc = "Attack your current target" },
+    { id = "tank attack", label = "Tank Attack",  isAction = true, desc = "Tank engages your target" },
+    { id = "stats",       label = "Stats",        isAction = true, desc = "Show bot statistics" },
+    { id = "revive",      label = "Revive",       isAction = true, desc = "Resurrect at Spirit Healer" },
+    { id = "release",     label = "Release",      isAction = true, desc = "Release spirit after death" },
+    { id = "summon",      label = "Summon",       isAction = true, desc = "Teleport bot to your location" },
 }
 
 -- ============================================================================
@@ -282,20 +282,20 @@ addon.ACTION_COMMANDS = {
 -- channel specifies "nc" (non-combat) or "co" (combat).
 -- ============================================================================
 addon.GENERIC_STRATEGIES = {
-    { id = "cast time",   label = "Cast Time",   channel = "co" },
-    { id = "threat",      label = "Threat",       channel = "co" },
-    { id = "behind",      label = "Behind",       channel = "co" },
-    { id = "ranged",      label = "Ranged",       channel = "co" },
-    { id = "close",       label = "Close",        channel = "co" },
-    { id = "kite",        label = "Kite",         channel = "co" },
-    { id = "avoid aoe",   label = "Avoid AOE",    channel = "co" },
-    { id = "tank face",   label = "Tank Face",    channel = "co" },
-    { id = "aggressive",  label = "Aggressive",   channel = "co" },
-    { id = "save mana",   label = "Save Mana",    channel = "co" },
-    { id = "potions",     label = "Potions",       channel = "nc" },
-    { id = "food",        label = "Food",          channel = "nc" },
-    { id = "pvp",         label = "PvP",           channel = "nc" },
-    { id = "mount",       label = "Mount",         channel = "nc" },
+    { id = "cast time",   label = "Cast Time",   channel = "co", desc = "Use abilities with cast time" },
+    { id = "threat",      label = "Threat",       channel = "co", desc = "Use threat management abilities" },
+    { id = "behind",      label = "Behind",       channel = "co", desc = "Position behind the target" },
+    { id = "ranged",      label = "Ranged",       channel = "co", desc = "Keep distance, use ranged attacks" },
+    { id = "close",       label = "Close",        channel = "co", desc = "Stay in melee range" },
+    { id = "kite",        label = "Kite",         channel = "co", desc = "Kite enemies while attacking" },
+    { id = "avoid aoe",   label = "Avoid AOE",    channel = "co", desc = "Move out of area damage effects" },
+    { id = "tank face",   label = "Tank Face",    channel = "co", desc = "Tank faces target away from group" },
+    { id = "aggressive",  label = "Aggressive",   channel = "co", desc = "Engage enemies more aggressively" },
+    { id = "save mana",   label = "Save Mana",    channel = "co", desc = "Conserve mana during combat" },
+    { id = "potions",     label = "Potions",       channel = "nc", desc = "Use potions when needed" },
+    { id = "food",        label = "Food",          channel = "nc", desc = "Eat and drink out of combat" },
+    { id = "pvp",         label = "PvP",           channel = "nc", desc = "Attack enemy players" },
+    { id = "mount",       label = "Mount",         channel = "nc", desc = "Use mount when traveling" },
 }
 
 -- ============================================================================
@@ -303,9 +303,9 @@ addon.GENERIC_STRATEGIES = {
 -- Attack-type strategies (combat channel).
 -- ============================================================================
 addon.ATTACK_TYPE_STRATEGIES = {
-    { id = "dps assist",  label = "DPS Assist",  channel = "co" },
-    { id = "dps aoe",     label = "DPS AOE",     channel = "co" },
-    { id = "tank assist", label = "Tank Assist",  channel = "co" },
+    { id = "dps assist",  label = "DPS Assist",  channel = "co", desc = "DPS focuses your target" },
+    { id = "dps aoe",     label = "DPS AOE",     channel = "co", desc = "DPS uses area damage on all enemies" },
+    { id = "tank assist", label = "Tank Assist",  channel = "co", desc = "Tank holds aggro on your target" },
 }
 
 -- ============================================================================

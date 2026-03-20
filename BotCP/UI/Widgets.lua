@@ -229,7 +229,12 @@ function addon.CreateToggleButton(parent, config)
         local tooltipText = self.config.tooltip or self.config.label or ""
         GameTooltip:SetText(tooltipText, 1, 1, 1)
 
-        -- Show current state as second line
+        -- Show description if available
+        if self.config.description then
+            GameTooltip:AddLine(self.config.description, 0.7, 0.7, 0.7, true)
+        end
+
+        -- Show current state as next line
         local stateText = self.currentState or "UNKNOWN"
         if stateText == "ACTIVE" then
             GameTooltip:AddLine("Status: Active", 0, 1, 0)

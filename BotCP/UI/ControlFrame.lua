@@ -569,6 +569,7 @@ local function createToolbars()
                     icon = btnDef.icon,
                     label = btnDef.label,
                     tooltip = btnDef.tooltip,
+                    description = btnDef.description,
                     stateKey = btnDef.stateKey,
                 }
             end
@@ -638,6 +639,7 @@ local function populateClassToolbar(className)
                     icon = btnDef.icon,
                     label = btnDef.label,
                     tooltip = btnDef.tooltip,
+                    description = btnDef.description,
                     stateKey = btnDef.stateKey,
                 }
             end
@@ -656,6 +658,7 @@ local function populateClassToolbar(className)
                     icon = btnDef.icon,
                     label = btnDef.label,
                     tooltip = btnDef.tooltip,
+                    description = btnDef.description,
                     stateKey = btnDef.stateKey,
                 }
             end
