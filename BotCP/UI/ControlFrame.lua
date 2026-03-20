@@ -20,6 +20,7 @@ local selectedBot = nil          -- currently selected bot name (string or nil)
 local partyMode = false          -- whether party mode is active
 local toolbarGroups = {}         -- { [toolbarId] = ToolbarGroup frame, ... }
 local toolbarOrder = {}          -- ordered list of toolbar IDs for layout
+local classToolbarGroups = {}    -- array of ToolbarGroup frames for class sub-toolbars
 
 -- Backdrop table for the control frame
 local CONTROL_BACKDROP = {
@@ -50,6 +51,44 @@ local function sendCommand(botName, command)
 end
 
 -- ============================================================================
+-- Helper: Find all visible buttons with a matching exclusiveGroup
+-- Searches both static toolbars and class sub-toolbars.
+-- ============================================================================
+local function findButtonsByExclusiveGroup(groupId)
+    local result = {}
+    if not groupId then return result end
+
+    -- Search static toolbars
+    for _, toolbarId in ipairs(toolbarOrder) do
+        if toolbarId ~= "class_specific" then
+            local toolbar = toolbarGroups[toolbarId]
+            if toolbar and toolbar:IsShown() then
+                local buttons = toolbar:GetButtons()
+                for _, btn in ipairs(buttons) do
+                    if btn:IsShown() and btn.config and btn.config.exclusiveGroup == groupId then
+                        result[#result + 1] = btn
+                    end
+                end
+            end
+        end
+    end
+
+    -- Search class sub-toolbars
+    for _, classToolbar in ipairs(classToolbarGroups) do
+        if classToolbar:IsShown() then
+            local buttons = classToolbar:GetButtons()
+            for _, btn in ipairs(buttons) do
+                if btn:IsShown() and btn.config and btn.config.exclusiveGroup == groupId then
+                    result[#result + 1] = btn
+                end
+            end
+        end
+    end
+
+    return result
+end
+
+-- ============================================================================
 -- Button click handler: strategy toggle (co/nc strategy)
 -- ============================================================================
 local function onStrategyButtonClick(button, botName)
@@ -76,6 +115,59 @@ local function onStrategyButtonClick(button, botName)
         local prevValue = (currentState == "ACTIVE")
         addon:SetPendingState(botName, stateKey, requestId, prevValue)
         button:SetState("PENDING")
+    end
+end
+
+-- ============================================================================
+-- Button click handler: exclusive strategy (attack type and class exclusive)
+-- When activating, deactivate all others in the same exclusiveGroup first.
+-- ============================================================================
+local function onExclusiveStrategyButtonClick(button, botName)
+    if not botName then return end
+    local config = button.config
+    if not config or not config.stateKey then return end
+
+    local currentState = addon:GetButtonState(botName, config.stateKey)
+
+    if currentState == "ACTIVE" then
+        -- Deactivate this strategy
+        local command = config.channel .. " -" .. config.strategyName .. ",?"
+        local requestId = sendCommand(botName, command)
+        if requestId and not partyMode then
+            addon:SetPendingState(botName, config.stateKey, requestId, true)
+            button:SetState("PENDING")
+        end
+    else
+        -- Find all buttons in the same exclusive group
+        local groupButtons = findButtonsByExclusiveGroup(config.exclusiveGroup)
+
+        -- Build command: deactivate any active ones, then activate this one
+        local parts = {}
+        for _, btn in ipairs(groupButtons) do
+            if btn ~= button and btn.config and btn.config.strategyName then
+                local btnState = addon:GetButtonState(botName, btn.config.stateKey)
+                if btnState == "ACTIVE" then
+                    parts[#parts + 1] = "-" .. btn.config.strategyName
+                end
+            end
+        end
+        parts[#parts + 1] = "+" .. config.strategyName
+        parts[#parts + 1] = "?"
+
+        local command = config.channel .. " " .. table_concat(parts, ",")
+        local requestId = sendCommand(botName, command)
+
+        if requestId and not partyMode then
+            addon:SetPendingState(botName, config.stateKey, requestId, false)
+
+            -- Set clicked button to PENDING, all others in group to INACTIVE
+            button:SetState("PENDING")
+            for _, btn in ipairs(groupButtons) do
+                if btn ~= button then
+                    btn:SetState("INACTIVE")
+                end
+            end
+        end
     end
 end
 
@@ -206,64 +298,6 @@ local function onActionButtonClick(button, botName)
 end
 
 -- ============================================================================
--- Button click handler: save mana (exclusive strategy)
--- When activating one save mana level, deactivate all others first
--- ============================================================================
-local function onSaveManaButtonClick(button, botName)
-    if not botName then return end
-    local config = button.config
-    if not config or not config.stateKey then return end
-
-    local currentState = addon:GetButtonState(botName, config.stateKey)
-
-    if currentState == "ACTIVE" then
-        -- Just deactivate this one
-        local command = config.channel .. " -" .. config.strategyName .. ",?"
-        local requestId = sendCommand(botName, command)
-        if requestId and not partyMode then
-            addon:SetPendingState(botName, config.stateKey, requestId, true)
-            button:SetState("PENDING")
-        end
-    else
-        -- Deactivate all save mana levels, activate this one
-        local parts = {}
-        local toolbar = toolbarGroups["save_mana"]
-        if toolbar then
-            local buttons = toolbar:GetButtons()
-            for _, btn in ipairs(buttons) do
-                if btn.config and btn.config.strategyName and btn ~= button then
-                    local btnState = addon:GetButtonState(botName, btn.config.stateKey)
-                    if btnState == "ACTIVE" then
-                        parts[#parts + 1] = "-" .. btn.config.strategyName
-                    end
-                end
-            end
-        end
-        parts[#parts + 1] = "+" .. config.strategyName
-        parts[#parts + 1] = "?"
-
-        local command = config.channel .. " " .. table_concat(parts, ",")
-        local requestId = sendCommand(botName, command)
-
-        if requestId and not partyMode then
-            addon:SetPendingState(botName, config.stateKey, requestId, false)
-
-            -- Update button visuals for the exclusive group
-            if toolbar then
-                local buttons = toolbar:GetButtons()
-                for _, btn in ipairs(buttons) do
-                    if btn == button then
-                        btn:SetState("PENDING")
-                    else
-                        btn:SetState("INACTIVE")
-                    end
-                end
-            end
-        end
-    end
-end
-
--- ============================================================================
 -- Dispatch click based on commandType
 -- ============================================================================
 local function onButtonClick(button)
@@ -277,9 +311,8 @@ local function onButtonClick(button)
     if cmdType == "action" then
         onActionButtonClick(button, bot)
     elseif cmdType == "strategy" then
-        -- Check if this button belongs to the save_mana exclusive group
-        if config.stateKey and config.stateKey:match("^co:save mana") then
-            onSaveManaButtonClick(button, bot)
+        if config.exclusiveGroup then
+            onExclusiveStrategyButtonClick(button, bot)
         else
             onStrategyButtonClick(button, bot)
         end
@@ -314,6 +347,61 @@ local function onResetClick(toolbarId)
         return
     end
 
+    -- Check if this is a class sub-toolbar reset
+    local classSubIndex = toolbarId:match("^class_sub_(%d+)$")
+    if classSubIndex then
+        local idx = tonumber(classSubIndex)
+        local toolbar = classToolbarGroups[idx]
+        if not toolbar or not toolbar:IsShown() then return end
+
+        local buttons = toolbar:GetButtons()
+        if not buttons or #buttons == 0 then return end
+
+        -- Group strategies by channel
+        local coStrategies = {}
+        local ncStrategies = {}
+
+        for _, btn in ipairs(buttons) do
+            local btnConfig = btn.config
+            if btn:IsShown() and btnConfig and btnConfig.commandType == "strategy" and btnConfig.strategyName then
+                if btnConfig.channel == "co" then
+                    coStrategies[#coStrategies + 1] = btnConfig.strategyName
+                elseif btnConfig.channel == "nc" then
+                    ncStrategies[#ncStrategies + 1] = btnConfig.strategyName
+                end
+            end
+        end
+
+        -- Build and send reset commands
+        if #coStrategies > 0 then
+            local parts = {}
+            for _, name in ipairs(coStrategies) do
+                parts[#parts + 1] = "-" .. name
+            end
+            parts[#parts + 1] = "?"
+            local command = "co " .. table_concat(parts, ",")
+            sendCommand(bot, command)
+        end
+
+        if #ncStrategies > 0 then
+            local parts = {}
+            for _, name in ipairs(ncStrategies) do
+                parts[#parts + 1] = "-" .. name
+            end
+            parts[#parts + 1] = "?"
+            local command = "nc " .. table_concat(parts, ",")
+            sendCommand(bot, command)
+        end
+
+        -- Set all buttons to INACTIVE visually
+        for _, btn in ipairs(buttons) do
+            if btn:IsShown() then
+                btn:SetState("INACTIVE")
+            end
+        end
+        return
+    end
+
     -- For strategy-based toolbars, collect strategies and send remove commands
     local toolbar = toolbarGroups[toolbarId]
     if not toolbar then return end
@@ -326,12 +414,12 @@ local function onResetClick(toolbarId)
     local ncStrategies = {}
 
     for _, btn in ipairs(buttons) do
-        local config = btn.config
-        if config and config.commandType == "strategy" and config.strategyName then
-            if config.channel == "co" then
-                coStrategies[#coStrategies + 1] = config.strategyName
-            elseif config.channel == "nc" then
-                ncStrategies[#ncStrategies + 1] = config.strategyName
+        local btnConfig = btn.config
+        if btnConfig and btnConfig.commandType == "strategy" and btnConfig.strategyName then
+            if btnConfig.channel == "co" then
+                coStrategies[#coStrategies + 1] = btnConfig.strategyName
+            elseif btnConfig.channel == "nc" then
+                ncStrategies[#ncStrategies + 1] = btnConfig.strategyName
             end
         end
     end
@@ -370,9 +458,18 @@ updateScrollChildHeight = function()
     if not scrollChild then return end
     local totalHeight = 8  -- initial top padding
     for _, toolbarId in ipairs(toolbarOrder) do
-        local toolbar = toolbarGroups[toolbarId]
-        if toolbar and toolbar:IsShown() then
-            totalHeight = totalHeight + toolbar:GetHeight() + 8
+        if toolbarId == "class_specific" then
+            -- Account for class sub-toolbars instead
+            for _, classToolbar in ipairs(classToolbarGroups) do
+                if classToolbar:IsShown() then
+                    totalHeight = totalHeight + classToolbar:GetHeight() + 8
+                end
+            end
+        else
+            local toolbar = toolbarGroups[toolbarId]
+            if toolbar and toolbar:IsShown() then
+                totalHeight = totalHeight + toolbar:GetHeight() + 8
+            end
         end
     end
     totalHeight = totalHeight + 8  -- bottom padding
@@ -388,15 +485,30 @@ end
 relayoutToolbars = function()
     local previousToolbar = nil
     for _, toolbarId in ipairs(toolbarOrder) do
-        local toolbar = toolbarGroups[toolbarId]
-        if toolbar and toolbar:IsShown() then
-            toolbar:ClearAllPoints()
-            if previousToolbar then
-                toolbar:SetPoint("TOPLEFT", previousToolbar, "BOTTOMLEFT", 0, -8)
-            else
-                toolbar:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 8, -8)
+        if toolbarId == "class_specific" then
+            -- Position visible class sub-toolbars
+            for _, classToolbar in ipairs(classToolbarGroups) do
+                if classToolbar:IsShown() then
+                    classToolbar:ClearAllPoints()
+                    if previousToolbar then
+                        classToolbar:SetPoint("TOPLEFT", previousToolbar, "BOTTOMLEFT", 0, -8)
+                    else
+                        classToolbar:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 8, -8)
+                    end
+                    previousToolbar = classToolbar
+                end
             end
-            previousToolbar = toolbar
+        else
+            local toolbar = toolbarGroups[toolbarId]
+            if toolbar and toolbar:IsShown() then
+                toolbar:ClearAllPoints()
+                if previousToolbar then
+                    toolbar:SetPoint("TOPLEFT", previousToolbar, "BOTTOMLEFT", 0, -8)
+                else
+                    toolbar:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 8, -8)
+                end
+                previousToolbar = toolbar
+            end
         end
     end
     updateScrollChildHeight()
@@ -435,50 +547,49 @@ local function createToolbars()
     toolbarOrder = {}
 
     for _, def in ipairs(defs) do
-        local toolbarConfig = {
-            name = "BotCP_Toolbar_" .. def.id,
-            label = def.label,
-            buttons = {},
-            columns = def.columns,
-            buttonSize = def.buttonSize,
-            spacing = 4,
-            hasReset = def.hasReset,
-        }
-
-        -- Build button configs from the def buttons
-        -- (For the dynamic class_specific toolbar, buttons starts empty)
-        for _, btnDef in ipairs(def.buttons) do
-            toolbarConfig.buttons[#toolbarConfig.buttons + 1] = {
-                name = "BotCP_Btn_" .. def.id .. "_" .. (btnDef.id or ""):gsub(" ", "_"),
-                size = def.buttonSize,
-                icon = btnDef.icon,
-                label = btnDef.label,
-                tooltip = btnDef.tooltip,
-                stateKey = btnDef.stateKey,
-            }
-        end
-
-        -- Create the toolbar group via Widgets API
-        local toolbar = addon.CreateToolbarGroup(scrollChild, toolbarConfig)
-
-        -- Position it
-        if previousToolbar then
-            toolbar:SetPoint("TOPLEFT", previousToolbar, "BOTTOMLEFT", 0, -8)
-        else
-            toolbar:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 8, -8)
-        end
-
-        -- Wire click handlers and reset handler
-        wireToolbarHandlers(toolbar, def)
-
-        -- For dynamic toolbar (class_specific), hide by default since it has no buttons yet
+        -- Skip the class_specific dynamic entry; we handle class sub-toolbars separately
         if def.dynamic then
-            toolbar:Hide()
-        end
+            toolbarOrder[#toolbarOrder + 1] = def.id
+        else
+            local toolbarConfig = {
+                name = "BotCP_Toolbar_" .. def.id,
+                label = def.label,
+                buttons = {},
+                columns = def.columns,
+                buttonSize = def.buttonSize,
+                spacing = 4,
+                hasReset = def.hasReset,
+            }
 
-        toolbarGroups[def.id] = toolbar
-        toolbarOrder[#toolbarOrder + 1] = def.id
-        previousToolbar = toolbar
+            -- Build button configs from the def buttons
+            for _, btnDef in ipairs(def.buttons) do
+                toolbarConfig.buttons[#toolbarConfig.buttons + 1] = {
+                    name = "BotCP_Btn_" .. def.id .. "_" .. (btnDef.id or ""):gsub(" ", "_"),
+                    size = def.buttonSize,
+                    icon = btnDef.icon,
+                    label = btnDef.label,
+                    tooltip = btnDef.tooltip,
+                    stateKey = btnDef.stateKey,
+                }
+            end
+
+            -- Create the toolbar group via Widgets API
+            local toolbar = addon.CreateToolbarGroup(scrollChild, toolbarConfig)
+
+            -- Position it
+            if previousToolbar then
+                toolbar:SetPoint("TOPLEFT", previousToolbar, "BOTTOMLEFT", 0, -8)
+            else
+                toolbar:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 8, -8)
+            end
+
+            -- Wire click handlers and reset handler
+            wireToolbarHandlers(toolbar, def)
+
+            toolbarGroups[def.id] = toolbar
+            toolbarOrder[#toolbarOrder + 1] = def.id
+            previousToolbar = toolbar
+        end
     end
 
     -- Update scroll child height based on toolbar layout
@@ -486,52 +597,95 @@ local function createToolbars()
 end
 
 -- ============================================================================
--- Populate the dynamic class toolbar for a given class.
--- Uses ToolbarGroup:SetButtons() and :SetLabel() to reconfigure at runtime.
+-- Populate the dynamic class toolbars for a given class.
+-- Creates or reuses ToolbarGroup frames for each class sub-group.
 -- ============================================================================
 local function populateClassToolbar(className)
-    local toolbar = toolbarGroups["class_specific"]
-    if not toolbar then return end
+    -- Hide all existing class sub-toolbars
+    for _, classToolbar in ipairs(classToolbarGroups) do
+        classToolbar:Hide()
+    end
 
-    -- Build class button definitions from ToolbarDefs
-    local classButtons = addon.BuildClassButtons(className)
+    -- Get sub-group definitions from ToolbarDefs
+    local subGroupDefs = addon.BuildClassToolbarDefs(className)
 
-    if #classButtons == 0 then
-        toolbar:Hide()
-        toolbar:SetLabel("Class")
+    if #subGroupDefs == 0 then
         relayoutToolbars()
         return
     end
 
-    -- Update the label with class name
-    local displayName = className:sub(1, 1) .. className:sub(2):lower()
-    toolbar:SetLabel("Class (" .. displayName .. ")")
+    -- For each sub-group, create or reuse a ToolbarGroup frame
+    for i, subDef in ipairs(subGroupDefs) do
+        local classToolbar = classToolbarGroups[i]
 
-    -- Build button configs for the ToolbarGroup:SetButtons() API
-    local buttonConfigs = {}
-    for _, btnDef in ipairs(classButtons) do
-        buttonConfigs[#buttonConfigs + 1] = {
-            name = "BotCP_Btn_class_" .. (btnDef.id or ""):gsub(" ", "_"),
-            size = { 32, 32 },
-            icon = btnDef.icon,
-            label = btnDef.label,
-            tooltip = btnDef.tooltip,
-            stateKey = btnDef.stateKey,
-        }
+        if not classToolbar then
+            -- Create a new ToolbarGroup for this sub-group slot
+            local toolbarConfig = {
+                name = "BotCP_ClassToolbar_" .. i,
+                label = subDef.label,
+                buttons = {},
+                columns = 8,
+                buttonSize = { 32, 32 },
+                spacing = 4,
+                hasReset = true,
+            }
+
+            -- Build initial button configs
+            for _, btnDef in ipairs(subDef.buttons) do
+                toolbarConfig.buttons[#toolbarConfig.buttons + 1] = {
+                    name = "BotCP_Btn_class_" .. i .. "_" .. (btnDef.id or ""):gsub(" ", "_"),
+                    size = { 32, 32 },
+                    icon = btnDef.icon,
+                    label = btnDef.label,
+                    tooltip = btnDef.tooltip,
+                    stateKey = btnDef.stateKey,
+                }
+            end
+
+            classToolbar = addon.CreateToolbarGroup(scrollChild, toolbarConfig)
+            classToolbarGroups[i] = classToolbar
+        else
+            -- Reuse existing ToolbarGroup: update label and buttons
+            classToolbar:SetLabel(subDef.label)
+
+            local buttonConfigs = {}
+            for _, btnDef in ipairs(subDef.buttons) do
+                buttonConfigs[#buttonConfigs + 1] = {
+                    name = "BotCP_Btn_class_" .. i .. "_" .. (btnDef.id or ""):gsub(" ", "_"),
+                    size = { 32, 32 },
+                    icon = btnDef.icon,
+                    label = btnDef.label,
+                    tooltip = btnDef.tooltip,
+                    stateKey = btnDef.stateKey,
+                }
+            end
+
+            classToolbar:SetButtons(buttonConfigs)
+        end
+
+        -- Wire click handlers on all buttons
+        local toolbarButtons = classToolbar:GetButtons()
+        for j, btn in ipairs(toolbarButtons) do
+            if subDef.buttons[j] then
+                btn.config = subDef.buttons[j]
+                btn:SetOnClick(onButtonClick)
+            end
+        end
+
+        -- Wire reset handler for this class sub-toolbar
+        local subToolbarId = "class_sub_" .. i
+        classToolbar:SetResetHandler(function()
+            onResetClick(subToolbarId)
+        end)
+
+        classToolbar:Show()
     end
 
-    -- Reconfigure the toolbar with new buttons via Widgets API
-    toolbar:SetButtons(buttonConfigs)
+    -- Hide excess toolbars from previous class (if any had more sub-groups)
+    for i = #subGroupDefs + 1, #classToolbarGroups do
+        classToolbarGroups[i]:Hide()
+    end
 
-    -- Wire click handlers and reset handler on the new buttons
-    local classDef = {
-        id = "class_specific",
-        hasReset = true,
-        buttons = classButtons,
-    }
-    wireToolbarHandlers(toolbar, classDef)
-
-    toolbar:Show()
     relayoutToolbars()
 end
 
@@ -542,9 +696,18 @@ local function refreshAllButtons(botName)
     if not botName then return end
 
     for _, toolbarId in ipairs(toolbarOrder) do
-        local toolbar = toolbarGroups[toolbarId]
-        if toolbar and toolbar:IsShown() then
-            toolbar:UpdateAllButtons(botName)
+        if toolbarId == "class_specific" then
+            -- Refresh class sub-toolbars
+            for _, classToolbar in ipairs(classToolbarGroups) do
+                if classToolbar:IsShown() then
+                    classToolbar:UpdateAllButtons(botName)
+                end
+            end
+        else
+            local toolbar = toolbarGroups[toolbarId]
+            if toolbar and toolbar:IsShown() then
+                toolbar:UpdateAllButtons(botName)
+            end
         end
     end
 end

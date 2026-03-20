@@ -3,7 +3,8 @@ local addonName, addon = ...
 
 -- Локальные ссылки на часто используемые API (для производительности)
 local ipairs = ipairs
-local tostring = tostring
+local string_lower = string.lower
+local string_gsub = string.gsub
 
 -- ============================================================================
 -- Icon constants for toolbar buttons
@@ -42,22 +43,25 @@ local ICONS = {
     loot_skill      = "Interface\\Icons\\Trade_Engineering",
 
     -- Attack Type
-    tank_aoe    = "Interface\\Icons\\Spell_Holy_SealOfProtection",
     tank_assist = "Interface\\Icons\\Ability_Warrior_ShieldBash",
     dps_assist  = "Interface\\Icons\\Ability_Warrior_Rampage",
-    caster_aoe  = "Interface\\Icons\\Spell_Fire_Flamestrike",
+    dps_aoe     = "Interface\\Icons\\Spell_Fire_Flamestrike",
 
     -- Generic strategies
     potions       = "Interface\\Icons\\INV_Potion_51",
     food          = "Interface\\Icons\\INV_Misc_Food_11",
     cast_time     = "Interface\\Icons\\Spell_Nature_Lightning",
-    conserve_mana = "Interface\\Icons\\INV_Enchant_EssenceMagicSmall",
-    buff          = "Interface\\Icons\\Spell_Holy_GreaterBlessingofKings",
-    attack_weak   = "Interface\\Icons\\Ability_BackStab",
     threat        = "Interface\\Icons\\Spell_Nature_ReincarnationMan",
-
-    -- Save mana
-    save_mana   = "Interface\\Icons\\INV_Elemental_Mote_Mana",
+    behind        = "Interface\\Icons\\Ability_BackStab",
+    ranged        = "Interface\\Icons\\Ability_Marksmanship",
+    close         = "Interface\\Icons\\Ability_Warrior_Charge",
+    kite          = "Interface\\Icons\\Ability_Hunter_Pathfinding",
+    avoid_aoe     = "Interface\\Icons\\Spell_Arcane_Blink",
+    tank_face     = "Interface\\Icons\\Ability_Warrior_ShieldBash",
+    aggressive    = "Interface\\Icons\\Ability_Warrior_InnerRage",
+    save_mana     = "Interface\\Icons\\INV_Elemental_Mote_Mana",
+    pvp           = "Interface\\Icons\\INV_BannerPVP_01",
+    mount         = "Interface\\Icons\\Ability_Mount_Ridinghorse",
 
     -- Class-specific (default icon for class strats, used as fallback)
     class_default = "Interface\\Icons\\Trade_Engineering",
@@ -73,9 +77,7 @@ local ICONS = {
     bdps        = "Interface\\Icons\\Spell_Holy_MindVision",
     arcane      = "Interface\\Icons\\Spell_Holy_MagicSentry",
     fire        = "Interface\\Icons\\Spell_Fire_FlameBolt",
-    fire_aoe    = "Interface\\Icons\\Spell_Fire_SelfDestruct",
     frost       = "Interface\\Icons\\Spell_Frost_FrostBolt02",
-    frost_aoe   = "Interface\\Icons\\Spell_Frost_IceStorm",
     tank        = "Interface\\Icons\\Ability_Warrior_DefensiveStance",
     bhealth     = "Interface\\Icons\\Spell_Holy_SealOfSacrifice",
     barmor      = "Interface\\Icons\\Spell_Holy_DevotionAura",
@@ -84,14 +86,84 @@ local ICONS = {
     shadow      = "Interface\\Icons\\Spell_Shadow_ShadowBolt",
     shadow_debuff = "Interface\\Icons\\Spell_Shadow_CurseOfSargeras",
     shadow_aoe  = "Interface\\Icons\\Spell_Shadow_RainOfFire",
-    behind      = "Interface\\Icons\\Ability_BackStab",
-    caster_aoe_class = "Interface\\Icons\\Spell_Fire_Fireball",
-    totems      = "Interface\\Icons\\Spell_Nature_ManaTide",
     pet         = "Interface\\Icons\\Spell_Shadow_SummonImp",
     rshadow     = "Interface\\Icons\\Spell_Shadow_Requiem",
     aoe         = "Interface\\Icons\\Ability_Warrior_Whirlwind",
     blood       = "Interface\\Icons\\Spell_Deathknight_BloodPresence",
     unholy      = "Interface\\Icons\\Spell_Deathknight_UnholyPresence",
+    buff        = "Interface\\Icons\\Spell_Holy_GreaterBlessingofKings",
+
+    -- Class abilities (new)
+    cure        = "Interface\\Icons\\Spell_Holy_DispelMagic",
+    boost       = "Interface\\Icons\\Spell_Holy_PowerInfusion",
+    cc          = "Interface\\Icons\\Spell_Frost_Stun",
+    pull        = "Interface\\Icons\\Ability_Marksmanship",
+
+    -- Paladin buffs (new)
+    bstats      = "Interface\\Icons\\Spell_Holy_GreaterBlessingofKings",
+    bcast       = "Interface\\Icons\\Spell_Holy_SealOfWisdom",
+    baoe        = "Interface\\Icons\\Spell_Holy_SealOfRighteousness",
+
+    -- Resistances (new)
+    rfrost      = "Interface\\Icons\\Spell_Frost_WizardMark",
+    rfire       = "Interface\\Icons\\Spell_Fire_SealOfFire",
+    rnature     = "Interface\\Icons\\Spell_Nature_NatureResistanceTotem",
+
+    -- Hunter specs (new)
+    bm          = "Interface\\Icons\\Ability_Hunter_BeastTaming",
+    mm          = "Interface\\Icons\\Ability_Hunter_FocusedAim",
+    surv        = "Interface\\Icons\\Ability_Hunter_SurvivalInstincts",
+    trap_weave  = "Interface\\Icons\\Spell_Frost_ChainsOfIce",
+
+    -- Rogue (new)
+    stealthed   = "Interface\\Icons\\Ability_Stealth",
+    stealth     = "Interface\\Icons\\Ability_Ambush",
+
+    -- Warrior (new)
+    arms        = "Interface\\Icons\\Ability_Warrior_SavageBlow",
+    fury        = "Interface\\Icons\\Ability_Warrior_InnerRage",
+
+    -- Priest (new)
+    holy_dps    = "Interface\\Icons\\Spell_Holy_SearingLight",
+    holy_heal   = "Interface\\Icons\\Spell_Holy_Renew",
+
+    -- Shaman (new)
+    strength_of_earth = "Interface\\Icons\\Spell_Nature_EarthBindTotem",
+    stoneskin   = "Interface\\Icons\\Spell_Nature_StoneSkinTotem",
+    tremor      = "Interface\\Icons\\Spell_Nature_TremorTotem",
+    earthbind   = "Interface\\Icons\\Spell_Nature_StrengthOfEarthTotem02",
+    searing     = "Interface\\Icons\\Spell_Fire_SearingTotem",
+    magma       = "Interface\\Icons\\Spell_Fire_SelfDestruct",
+    flametongue = "Interface\\Icons\\Spell_Nature_GuardianWard",
+
+    -- Mage (new)
+    frostfire   = "Interface\\Icons\\Spell_Frost_FrostFire",
+    firestarter = "Interface\\Icons\\Spell_Fire_Immolation",
+
+    -- Warlock (new)
+    affli       = "Interface\\Icons\\Spell_Shadow_CurseOfSargeras",
+    demo        = "Interface\\Icons\\Spell_Shadow_Metamorphosis",
+    destro      = "Interface\\Icons\\Spell_Shadow_RainOfFire",
+    meta_melee  = "Interface\\Icons\\Spell_Shadow_DemonForm",
+    imp         = "Interface\\Icons\\Spell_Shadow_SummonImp",
+    voidwalker  = "Interface\\Icons\\Spell_Shadow_SummonVoidWalker",
+    succubus    = "Interface\\Icons\\Spell_Shadow_SummonSuccubus",
+    felhunter   = "Interface\\Icons\\Spell_Shadow_SummonFelHunter",
+    felguard    = "Interface\\Icons\\Spell_Shadow_SummonFelGuard",
+    ss_self     = "Interface\\Icons\\Spell_Shadow_SoulGem",
+    ss_master   = "Interface\\Icons\\Spell_Shadow_SoulGem",
+    ss_tank     = "Interface\\Icons\\Spell_Shadow_SoulGem",
+    ss_healer   = "Interface\\Icons\\Spell_Shadow_SoulGem",
+
+    -- Druid (new)
+    offheal     = "Interface\\Icons\\Spell_Nature_HealingTouch",
+    cat_aoe     = "Interface\\Icons\\Ability_Druid_Swipe",
+    caster_aoe  = "Interface\\Icons\\Spell_Fire_Fireball",
+    caster_debuff = "Interface\\Icons\\Spell_Nature_InsectSwarm",
+
+    -- DK (new)
+    frost_aoe   = "Interface\\Icons\\Spell_Frost_IceStorm",
+    unholy_aoe  = "Interface\\Icons\\Spell_DeathKnight_Pestilence",
 }
 
 -- ============================================================================
@@ -161,7 +233,7 @@ local function buildRtiButtons()
 end
 
 -- ============================================================================
--- Build attack type buttons from Constants
+-- Build attack type buttons from Constants (exclusive group)
 -- ============================================================================
 local function buildAttackTypeButtons()
     local buttons = {}
@@ -174,6 +246,7 @@ local function buildAttackTypeButtons()
             commandType = "strategy",
             channel = strat.channel,
             strategyName = strat.id,
+            exclusiveGroup = "attack_type",
             icon = ICONS[strat.id:gsub(" ", "_")] or ICONS.class_default,
         }
     end
@@ -195,28 +268,6 @@ local function buildGenericButtons()
             channel = strat.channel,
             strategyName = strat.id,
             icon = ICONS[strat.id:gsub(" ", "_")] or ICONS.class_default,
-        }
-    end
-    return buttons
-end
-
--- ============================================================================
--- Build save mana buttons from Constants
--- ============================================================================
-local function buildSaveManaButtons()
-    local buttons = {}
-    for _, level in ipairs(addon.SAVE_MANA_LEVELS) do
-        local levelStr = tostring(level)
-        local stratName = "save mana " .. levelStr
-        buttons[#buttons + 1] = {
-            id = "save_mana_" .. levelStr,
-            label = levelStr,
-            tooltip = "Save Mana Level " .. levelStr,
-            stateKey = "co:" .. stratName,
-            commandType = "strategy",
-            channel = "co",
-            strategyName = stratName,
-            icon = ICONS.save_mana,
         }
     end
     return buttons
@@ -402,7 +453,7 @@ addon.TOOLBAR_DEFS = {
     },
 
     -- ========================================================================
-    -- 6. Attack Type toolbar (generated from Constants)
+    -- 6. Attack Type toolbar (exclusive, generated from Constants)
     -- ========================================================================
     {
         id = "attack_type",
@@ -410,6 +461,7 @@ addon.TOOLBAR_DEFS = {
         columns = 8,
         buttonSize = { 32, 32 },
         hasReset = true,
+        exclusive = true,
         buttons = buildAttackTypeButtons(),
     },
 
@@ -426,20 +478,7 @@ addon.TOOLBAR_DEFS = {
     },
 
     -- ========================================================================
-    -- 8. Save Mana toolbar (exclusive, generated from Constants)
-    -- ========================================================================
-    {
-        id = "save_mana",
-        label = "Save Mana",
-        columns = 5,
-        buttonSize = { 32, 32 },
-        hasReset = true,
-        exclusive = true,
-        buttons = buildSaveManaButtons(),
-    },
-
-    -- ========================================================================
-    -- 9. Class-specific toolbar (dynamic, populated at runtime)
+    -- 8. Class-specific toolbar (dynamic, populated at runtime)
     -- ========================================================================
     {
         id = "class_specific",
@@ -453,38 +492,63 @@ addon.TOOLBAR_DEFS = {
 }
 
 -- ============================================================================
--- addon.BuildClassButtons(className)
--- Build button definitions for a specific class from CLASS_STRATEGIES.
--- Called by ControlFrame when selecting a bot to populate the dynamic toolbar.
+-- addon.BuildClassToolbarDefs(className)
+-- Build sub-group toolbar definitions for a specific class from CLASS_STRATEGIES.
+-- Called by ControlFrame when selecting a bot to populate class sub-toolbars.
 -- @param className string - uppercase English class name (e.g. "WARRIOR")
--- @return table - array of button definition tables, or empty table if unknown class
+-- @return table - array of sub-group definition tables, or empty table if unknown class
 -- ============================================================================
-function addon.BuildClassButtons(className)
-    local buttons = {}
+function addon.BuildClassToolbarDefs(className)
+    local result = {}
     if not className then
-        return buttons
+        return result
     end
 
-    local strategies = addon.CLASS_STRATEGIES[className]
-    if not strategies then
-        return buttons
+    local classGroups = addon.CLASS_STRATEGIES[className]
+    if not classGroups then
+        return result
     end
 
-    for _, stratName in ipairs(strategies) do
-        -- Determine channel: class strategies are combat ("co") by default
-        local channel = "co"
+    -- Build a display name for labels: "Warrior" from "WARRIOR", "Death Knight" from "DEATHKNIGHT"
+    local DISPLAY_NAMES = {
+        DEATHKNIGHT = "Death Knight",
+    }
+    local displayName = DISPLAY_NAMES[className] or (className:sub(1, 1) .. className:sub(2):lower())
 
-        buttons[#buttons + 1] = {
-            id = stratName:gsub(" ", "_"),
-            label = stratName:sub(1, 1):upper() .. stratName:sub(2),
-            tooltip = "Class Strategy: " .. stratName:sub(1, 1):upper() .. stratName:sub(2),
-            stateKey = channel .. ":" .. stratName,
-            commandType = "strategy",
-            channel = channel,
-            strategyName = stratName,
-            icon = getStrategyIcon(stratName),
+    for _, group in ipairs(classGroups) do
+        -- Build the exclusiveGroup identifier for exclusive sub-groups:
+        -- Format: "<CLASS>_<normalized_label>" where label is lowercased,
+        -- spaces -> underscores, parentheses removed
+        local exclusiveGroupId = nil
+        if group.exclusive then
+            local normalizedLabel = string_lower(group.label)
+            normalizedLabel = string_gsub(normalizedLabel, "[%(%)]", "")
+            normalizedLabel = string_gsub(normalizedLabel, " ", "_")
+            exclusiveGroupId = className .. "_" .. normalizedLabel
+        end
+
+        local buttons = {}
+        for _, strat in ipairs(group.strategies) do
+            buttons[#buttons + 1] = {
+                id = strat.id,
+                label = strat.label,
+                tooltip = "Class Strategy: " .. strat.label,
+                stateKey = group.channel .. ":" .. strat.id,
+                commandType = "strategy",
+                channel = group.channel,
+                strategyName = strat.id,
+                exclusiveGroup = exclusiveGroupId,
+                icon = getStrategyIcon(strat.id),
+            }
+        end
+
+        result[#result + 1] = {
+            label = displayName .. " - " .. group.label,
+            exclusive = group.exclusive,
+            channel = group.channel,
+            buttons = buttons,
         }
     end
 
-    return buttons
+    return result
 end
