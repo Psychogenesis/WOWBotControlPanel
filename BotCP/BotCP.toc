@@ -1,0 +1,29 @@
+## Interface: 30300
+## Title: BotCP - Bot Control Panel
+## Notes: UI panel for controlling PlayerBots (mod-playerbots)
+## Author: BotCP Team
+## Version: 1.0.0
+## SavedVariables: BotCP_DB
+## SavedVariablesPerCharacter: BotCP_CharDB
+
+# Utilities
+Libs\Util.lua
+
+# Core
+Core.lua
+
+# Data
+Modules\Constants.lua
+
+# Engine
+Modules\CommandEngine.lua
+Modules\ResponseParser.lua
+Modules\StateManager.lua
+Modules\BotRoster.lua
+
+# UI
+UI\Widgets.lua
+UI\MinimapButton.lua
+UI\RosterFrame.lua
+UI\ToolbarDefs.lua
+UI\ControlFrame.lua
