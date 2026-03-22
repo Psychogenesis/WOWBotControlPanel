@@ -108,8 +108,9 @@ local function onStrategyButtonClick(button, botName)
         prefix = "+"
     end
 
-    local command = channel .. " " .. prefix .. strategyName .. ",?"
+    local command = channel .. " " .. prefix .. strategyName
     local requestId = sendCommand(botName, command)
+    addon:QueryBotChannel(botName, channel)
 
     if requestId and not partyMode then
         local prevValue = (currentState == "ACTIVE")
@@ -131,8 +132,9 @@ local function onExclusiveStrategyButtonClick(button, botName)
 
     if currentState == "ACTIVE" then
         -- Deactivate this strategy
-        local command = config.channel .. " -" .. config.strategyName .. ",?"
+        local command = config.channel .. " -" .. config.strategyName
         local requestId = sendCommand(botName, command)
+        addon:QueryBotChannel(botName, config.channel)
         if requestId and not partyMode then
             addon:SetPendingState(botName, config.stateKey, requestId, true)
             button:SetState("PENDING")
@@ -152,10 +154,10 @@ local function onExclusiveStrategyButtonClick(button, botName)
             end
         end
         parts[#parts + 1] = "+" .. config.strategyName
-        parts[#parts + 1] = "?"
 
         local command = config.channel .. " " .. table_concat(parts, ",")
         local requestId = sendCommand(botName, command)
+        addon:QueryBotChannel(botName, config.channel)
 
         if requestId and not partyMode then
             addon:SetPendingState(botName, config.stateKey, requestId, false)
@@ -281,9 +283,32 @@ local function onActionButtonClick(button, botName)
     local config = button.config
     if not config then return end
 
-    sendCommand(botName, config.command)
+    local requestId = sendCommand(botName, config.command)
 
-    -- Brief visual flash to confirm command was sent
+    -- If this is a movement button with stateKey, set pending and update group
+    if config.stateKey and config.stateKey:match("^movement:") then
+        if requestId and not partyMode then
+            local botState = addon:GetBotState(botName)
+            local prevMovement = botState and botState.movement or nil
+            addon:SetPendingState(botName, config.stateKey, requestId, prevMovement)
+
+            -- Set all movement buttons: clicked = PENDING, others = INACTIVE
+            local toolbar = toolbarGroups["movement"]
+            if toolbar then
+                local buttons = toolbar:GetButtons()
+                for _, btn in ipairs(buttons) do
+                    if btn == button then
+                        btn:SetState("PENDING")
+                    elseif btn.config and btn.config.stateKey and btn.config.stateKey:match("^movement:") then
+                        btn:SetState("INACTIVE")
+                    end
+                end
+            end
+        end
+        return
+    end
+
+    -- Non-movement actions: brief visual flash to confirm command was sent
     button:SetState("ACTIVE")
     button._isFlashing = true
     local flashElapsed = 0
@@ -848,11 +873,11 @@ end
 
 -- ============================================================================
 -- Callback: BOTCP_BOT_TARGETED
--- Auto-select the targeted bot if auto-query is enabled
+-- Update the control frame if it is already visible
 -- ============================================================================
 local function onBotTargeted(botName)
-    if not addon.db or not addon.db.autoQueryOnTarget then return end
     if not botName then return end
+    if not controlFrame or not controlFrame:IsShown() then return end
 
     addon:ShowControlFrame(botName)
 end

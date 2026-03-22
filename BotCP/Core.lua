@@ -72,7 +72,6 @@ local DB_DEFAULTS = {
     rosterPosition = nil,
     controlPosition = nil,
     knownBots = {},
-    autoQueryOnTarget = true,
     commandThrottle = 0.3,
     pendingTimeout = 3.0,
 }

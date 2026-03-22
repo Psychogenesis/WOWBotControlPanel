@@ -8,7 +8,7 @@ local pairs = pairs
 local tremove = tremove
 
 -- Локальные переменные модуля
-local botStates = {}          -- { ["BotName"] = { coStrategies={}, ncStrategies={}, formation, lootStrategy, rti, pending={} }, ... }
+local botStates = {}          -- { ["BotName"] = { coStrategies={}, ncStrategies={}, formation, movement, lootStrategy, rti, pending={} }, ... }
 local PENDING_TIMEOUT = 3.0   -- from addon settings, default 3.0s
 local timeoutFrame = nil      -- OnUpdate frame to check for expired pending states
 local timeoutElapsed = 0      -- OnUpdate throttle accumulator for timeout checker
@@ -34,6 +34,7 @@ local function ensureBotState(botName)
             coStrategies = {},
             ncStrategies = {},
             formation = nil,
+            movement = nil,
             lootStrategy = nil,
             rti = nil,
             pending = {},
@@ -137,6 +138,8 @@ local function checkPendingTimeouts()
                 state.lootStrategy = previousValue
             elseif stateKey == "rti" then
                 state.rti = previousValue
+            elseif stateKey:match("^movement:") then
+                state.movement = previousValue
             elseif stateKey:match("^formation:") then
                 state.formation = previousValue
             elseif stateKey:match("^loot:") then
@@ -244,6 +247,27 @@ local function onFormationReceived(botName, formation)
 
     -- Advance query queue if this was from a query
     advanceQueryQueue(botName)
+end
+
+--- Handle movement received callback
+-- @param botName string
+-- @param movementId string - "follow", "stay", "guard", "grind", "flee", "passive"
+local function onMovementReceived(botName, movementId)
+    local state = ensureBotState(botName)
+    state.movement = movementId
+
+    -- Clear movement pending states (safe: collect keys first)
+    local toRemoveMov = {}
+    for stateKey, _ in pairs(state.pending) do
+        if stateKey:match("^movement:") then
+            toRemoveMov[#toRemoveMov + 1] = stateKey
+        end
+    end
+    for _, key in ipairs(toRemoveMov) do
+        state.pending[key] = nil
+    end
+
+    addon:FireCallback("BOTCP_STATE_CHANGED", botName, "movement", movementId)
 end
 
 --- Handle loot strategy received callback
@@ -382,6 +406,21 @@ function addon:IsFormation(botName, formationId)
     return state.formation == formationId
 end
 
+--- Check if the bot's current movement matches
+-- @param botName string
+-- @param movementId string
+-- @return boolean or nil
+function addon:IsMovement(botName, movementId)
+    local state = botStates[botName]
+    if not state then
+        return nil
+    end
+    if state.movement == nil then
+        return nil
+    end
+    return state.movement == movementId
+end
+
 --- Check if the bot's current loot strategy matches
 -- @param botName string
 -- @param lootId string
@@ -430,6 +469,15 @@ function addon:QueryBotState(botName)
     sendNextQuery(botName)
 end
 
+--- Send a single-channel strategy query with correct channel tracking.
+-- Used by click handlers to avoid channel disambiguation issues.
+-- @param botName string
+-- @param channel string - "co" or "nc"
+function addon:QueryBotChannel(botName, channel)
+    lastQueryType[botName] = channel
+    addon:SendBotCommand(botName, channel .. " ?")
+end
+
 --- Call QueryBotState for each online bot.
 function addon:QueryAllBotsState()
     if not addon.botRoster then
@@ -466,6 +514,19 @@ function addon:GetButtonState(botName, stateKey)
     if channel and stratName then
         -- Strategy state key
         local result = addon:IsStrategyActive(botName, channel, stratName)
+        if result == nil then
+            return "UNKNOWN"
+        elseif result then
+            return "ACTIVE"
+        else
+            return "INACTIVE"
+        end
+    end
+
+    -- Movement state key: "movement:follow"
+    local movementId = stateKey:match("^movement:(.+)$")
+    if movementId then
+        local result = addon:IsMovement(botName, movementId)
         if result == nil then
             return "UNKNOWN"
         elseif result then
@@ -530,6 +591,10 @@ addon:RegisterCallback("BOTCP_LOADED", function()
     -- Register callbacks for response events from ResponseParser
     addon:RegisterCallback("BOTCP_STRATEGIES_RECEIVED", function(botName, strategiesList, channelHint)
         onStrategiesReceived(botName, strategiesList, channelHint)
+    end)
+
+    addon:RegisterCallback("BOTCP_MOVEMENT_RECEIVED", function(botName, movementId)
+        onMovementReceived(botName, movementId)
     end)
 
     addon:RegisterCallback("BOTCP_FORMATION_RECEIVED", function(botName, formation)

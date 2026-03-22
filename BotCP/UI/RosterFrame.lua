@@ -602,13 +602,9 @@ addon:RegisterCallback("BOTCP_LOADED", function()
         addon:HideRoster()
     end)
 
-    -- Register callback: bot targeted -> auto-select if enabled
+    -- Register callback: bot targeted -> auto-select if roster is already open
     addon:RegisterCallback("BOTCP_BOT_TARGETED", function(botName)
-        if addon.db and addon.db.autoQueryOnTarget then
-            -- Show roster if hidden
-            if rosterFrame and not rosterFrame:IsShown() then
-                addon:ShowRoster()
-            end
+        if rosterFrame and rosterFrame:IsShown() then
             addon:SelectBot(botName)
         end
     end)

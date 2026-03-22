@@ -6,6 +6,16 @@ local CreateFrame = CreateFrame
 local pairs = pairs
 local tremove = tremove
 
+--- Strip WoW color codes (|cffXXXXXX and |r) from a string
+-- @param str string
+-- @return string - cleaned text
+local function stripColorCodes(str)
+    if not str then return str end
+    str = str:gsub("|c%x%x%x%x%x%x%x%x", "")
+    str = str:gsub("|r", "")
+    return str
+end
+
 -- Локальные переменные модуля
 local handlers = {}           -- { [id] = { pattern = string, handler = func }, ... }
 local nextHandlerId = 1
@@ -173,11 +183,28 @@ local function onWhisperMessage(message, sender)
     end
 
     -- -----------------------------------------------------------------------
+    -- Movement response: "Following", "Staying", "Grinding", "Fleeing", etc.
+    -- -----------------------------------------------------------------------
+    local MOVEMENT_RESPONSES = {
+        ["Following"]            = "follow",
+        ["Staying"]              = "stay",
+        ["Guarding"]             = "guard",
+        ["Grinding"]             = "grind",
+        ["Fleeing"]              = "flee",
+        ["Moving away from group"] = "passive",
+    }
+    local movementId = MOVEMENT_RESPONSES[message]
+    if movementId then
+        addon:FireCallback("BOTCP_MOVEMENT_RECEIVED", normalizedSender, movementId)
+        return
+    end
+
+    -- -----------------------------------------------------------------------
     -- Formation response: "Formation: near", "formation near", etc.
     -- -----------------------------------------------------------------------
     local formation = message:match("^[Ff]ormation:?%s+(%S+)")
     if formation then
-        addon:FireCallback("BOTCP_FORMATION_RECEIVED", normalizedSender, formation:lower())
+        addon:FireCallback("BOTCP_FORMATION_RECEIVED", normalizedSender, stripColorCodes(formation):lower())
         return
     end
 
